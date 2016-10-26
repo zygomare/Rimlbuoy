@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "#' Reads PAR_DIGI file coming from IML Buoy\n#'\n#' The PAR_DIGI file contains PAR and tilt data from the Mini buoy.\n#'\n#' @param fname Filename\n#'\n#' @return  It returns a list of fields containing all the data\n#' stored in the PAR_DIGI file. (see example)\n#'\n#' Headers :\n#' DateTime   : Time Format DD-MMM-YYYY HH:MM:SS.ss\n#' DOY        : Counter\n#' lat        : Latitude (North +ve)\n#' lon        : Longitude (East +ve)\n#' pitch      : Pitch Angle\n#' pitch.sd   : Standard deviation of Pitch Angle\n#' roll       : Roll Angle\n#' roll.sd    : Standard deviation of Roll Angle\n#' tilt       : Tilt Angle\n#' tilt.sd    : Standard deviation of Tilt Angle\n#'\n#' @examples\n#' # read an optical data file from IML Buoy dat file\n#' setwd(path.package(\"Rimlbuoy\"))\n#' raw = read.PAR_DIGI(\"data/IML-\")\n#' str(raw)\n#'\n#'\n#'@author Thomas Jaegler\n#'\n#'@export read.PAR_DIGI\n#'\n\n\n\nread.PAR_DIGI <- function(filen) {\n\n  con=file(filen,encoding=\"latin1\")\n  data=readLines(con)\n  close(con)\n\n  nrec = length(data)\n  nid=length(unlist(strsplit(data[1], \",\")))\n  tmp=unlist(strsplit(data, \",\"))\n  tmp.mat = as.data.frame(matrix(tmp, ncol=nid, nrow=nrec, byrow=T))\n\n  DateTime = as.POSIXct(paste(tmp.mat$V1, tmp.mat$V2), format=\"%Y/%m/%d %H:%M:%S\", tz=\"GMT\")\n\n  Model_numb=tmp.mat$V3\n\n  timer = as.numeric(levels(tmp.mat$V4)[tmp.mat$V4])\n  PAR= as.numeric(levels(tmp.mat$V5)[tmp.mat$V5])\n  pitch =  as.numeric(levels(tmp.mat$V6)[tmp.mat$V6])\n  roll =  as.numeric(levels(tmp.mat$V7)[tmp.mat$V7])\n  #### Compute Tilt from Roll and Pitch for each sensor\n  d2r <- pi / 180\n  tilt <- atan(sqrt(tan(roll*d2r)^2+tan(pitch*d2r)^2))/d2r\n\n\n  internal_temp= as.numeric(levels(tmp.mat$V8)[tmp.mat$V8])\n  cheksum= as.numeric(levels(tmp.mat$V9)[tmp.mat$V9])\n\n  return(list(DateTime=DateTime, Model_numb=Model_numb,\n              PAR=PAR,\n              pitch=pitch, roll=roll,tilt=tilt,\n              internal_temp=internal_temp,cheksum=cheksum))\n\n}\n",
+    "created" : 1477402985977.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2178049268",
+    "id" : "A942D2E0",
+    "lastKnownWriteTime" : 1474299627,
+    "last_content_update" : 1474299627,
+    "path" : "~/MEGA/Rimlbuoy/R/read.PAR_DIGI.R",
+    "project_path" : "R/read.PAR_DIGI.R",
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

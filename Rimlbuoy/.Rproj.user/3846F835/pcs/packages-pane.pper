@@ -1,0 +1,7 @@
+{
+    "installOptions" : {
+        "installDependencies" : true,
+        "installFromRepository" : false,
+        "libraryPath" : "/home/thomas/R/x86_64-redhat-linux-gnu-library/3.3"
+    }
+}

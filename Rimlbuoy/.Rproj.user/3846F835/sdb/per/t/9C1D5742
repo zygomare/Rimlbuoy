@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "#' Reads optics data coming from IML Buoy and returns a list of field containing all the data stored in the OCR3 file. (see example)\n#' @export read.OCR3\n#' @param fname Filename\n#' @return list of data\n#' Headers :\n#' DateTime   : Time Format DD-MMM-YYYY HH:MM:SS.ss\n#' DOY        : Counter\n#' lat        : Latitude (North +ve)\n#' lon        : Longitude (East +ve)\n#' waves      : Wavelength standard\n#'\n#' @examples\n#' # read an optical data file from IML Buoy dat file\n#' setwd(path.package(\"Rimlbuoy\"))\n#' raw = read.OCR3(\"data/IML-4_OCR3_20160501_000320.DAT\")\n#' str(raw)\n#'\n#'\n#'\n#'\n\n\n\nread.OCR3<- function(filen) {\n\n  con=file(filen,encoding=\"latin1\")\n  data=readLines(con)\n  close(con)\n\n  nrec = length(data)\n  tmp=unlist(strsplit(data, \",\"))\n  tmp.mat = as.data.frame(matrix(tmp, ncol=20, nrow=nrec, byrow=T))\n\n  DateTime = as.POSIXct(paste(tmp.mat$V1, tmp.mat$V2), format=\"%Y/%m/%d %H:%M:%S\", tz=\"GMT\")\n  DOY = as.numeric(levels(tmp.mat$V3)[tmp.mat$V3])\n\n  # Extract Lat and Lon\n  lat = convert_str_coord(levels(tmp.mat$V4)[tmp.mat$V4])\n  lon = convert_str_coord(levels(tmp.mat$V5)[tmp.mat$V5])\n\n\n  BioShutter = tmp.mat$V20\n\n  tmp=sapply(tmp.mat[,6:19], function(x) as.numeric(as.character(x)))\n\n  Lu = (tmp[,c(1,3,5,7,9,11, 13)])\n  Lu.sd = tmp[,c(2,4,6,8,10,12,14)]\n  colnames(Lu) <- c(\"412\",\"443\",\"490\",\"510\",\"555\",\"669\", \"683\")\n  colnames(Lu.sd) <- c(\"412\",\"443\",\"490\",\"510\",\"555\",\"669\", \"683\")\n\n\n\n  return(list(DateTime=DateTime, DOY=DOY, lat=lat,lon=lon,\n              waves = c(412,443,490,510,555,669, 683),\n              Lu0.86m=Lu, Lu0.86m.sd=Lu.sd))\n\n}\n",
+    "created" : 1477402976508.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "845181231",
+    "id" : "9C1D5742",
+    "lastKnownWriteTime" : 1476890340,
+    "last_content_update" : 1476890340,
+    "path" : "~/MEGA/Rimlbuoy/R/read.OCR3.R",
+    "project_path" : "R/read.OCR3.R",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

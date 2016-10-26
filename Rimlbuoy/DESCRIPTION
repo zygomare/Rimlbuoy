@@ -1,0 +1,15 @@
+Package: Rimlbuoy
+Type: Package
+Title: IML buoy data processing routines
+Version: 0.3
+Date: 2016-06-23
+Author: Simon Bélanger
+Maintainer: Thomas Jaegler <tj@arctus.ca> and Simon Bélanger <sbe@arctus.ca>
+Description: This package was developped to process optical data coming from the
+    IML buoy network. In particular it computes the remote sensing reflectance
+    from radiometric measurements.
+License: NO
+LazyData: TRUE
+Depends:
+    Cops,Riops
+RoxygenNote: 5.0.1
