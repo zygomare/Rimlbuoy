@@ -9,7 +9,7 @@ Description: This package was developped to process optical data coming from the
     IML buoy network. In particular it computes the remote sensing reflectance
     from radiometric measurements.
 License: NO
-LazyData: TRUE
+LazyData:TRUE
 Depends:
     Cops,Riops
 RoxygenNote: 5.0.1
