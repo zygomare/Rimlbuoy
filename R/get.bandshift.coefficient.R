@@ -1,6 +1,9 @@
-#' Get bandshift coefficient to remote sensing reflectance data from
-#' the IML (VIKING) buoys using the approache modified from
-#'  Zibordi et al (2009)
+#' Get bandshift coefficient to correct remote sensing reflectance.
+#'
+#'  Some of the differences in remote sensing reflectance between sensors
+#'  result from differences in wavebands characteristic (spectral and band width).
+#'  The method is modified from Zibordi et al (2009) based on empirical relationships
+#'  determined in the St Lawrence Estuary.
 #
 #'
 #' @param Rrs0 : reference remote sensing reflectance that need to be coorected for bandshift (numeric vector).
@@ -10,7 +13,7 @@
 #' @param band.width : bandwidth of a target wavelength (numeric vector).
 #'
 #'
-#' @return Return list of data with the bandshift coefficient The length of
+#' @return Return bandshift coefficients that need to be apply to  The length of
 #' the list is the length of the reference wavelength. Each element have the length of
 #' the sequence center on the targeted wavelength (bandwith dependant).
 #'
@@ -113,8 +116,8 @@ get.bandshift.coefficient <- function(Rrs0,
     #
     #ix.490=which.min(abs(as.numeric(unname(coef.bbp[1]))-as.numeric(names(Rrs0))))
     #ix.555=which.min(abs(as.numeric(unname(coef.bbp[2]))-as.numeric(names(Rrs0))))
-    ix.waves1=which.min(abs(bbp.coef.iml4$waves1-as.numeric(names(Rrs0))))
-    ix.waves2=which.min(abs(bbp.coef.iml4$waves2-as.numeric(names(Rrs0))))
+    ix.waves1=which.min(abs(bbp.coef.iml4$waves1-waves0))
+    ix.waves2=which.min(abs(bbp.coef.iml4$waves2-waves0))
 
     #R_490.555=Rrs0[ix.490]/Rrs0[ix.555]
     Ratio <- Rrs0[ix.waves1]/Rrs0[ix.waves2]
@@ -145,68 +148,113 @@ get.bandshift.coefficient <- function(Rrs0,
     ####total absorption section
 
     ####Anap Absorption
-    ix.490=which.min(abs(as.numeric(unname(coef.Anap[1]))-as.numeric(names(Rrs0))))
-    ix.665=which.min(abs(as.numeric(unname(coef.Anap[2]))-as.numeric(names(Rrs0))))
+    #ix.490=which.min(abs(as.numeric(unname(coef.Anap[1]))-as.numeric(names(Rrs0))))
+    #ix.665=which.min(abs(as.numeric(unname(coef.Anap[2]))-as.numeric(names(Rrs0))))
+    ix.waves1=which.min(abs(anap.coef.iml4$waves1-waves0))
+    ix.waves2=which.min(abs(anap.coef.iml4$waves2-waves0))
 
-    R_490.665=Rrs0[ix.490]/Rrs0[ix.665]
-    anap.ref=coef.Anap[4]+coef.Anap[3]*R_490.665
+    #R_490.665=Rrs0[ix.490]/Rrs0[ix.665]
+    #anap.ref=coef.Anap[4]+coef.Anap[3]*R_490.665
+    Ratio <- Rrs0[ix.waves1]/Rrs0[ix.waves2]
+    anap.ref=10^(anap.coef.iml4$intercept+anap.coef.iml4$slope*Ratio)
 
-    anap.sp0=spectral.nap(waves0.vec,10^as.numeric(unname(anap.ref)),wl.ref = 412
-                          ,S=as.numeric(unname(coef.Anap[5])))
 
-    anap.sp=spectral.nap(waves.vec,10^as.numeric(unname(anap.ref)),wl.ref = 412
-                         ,S=as.numeric(unname(coef.Anap[5])))
+    #anap.sp0=spectral.nap(waves0.vec,10^as.numeric(unname(anap.ref)),wl.ref = 412
+    #                      ,S=as.numeric(unname(coef.Anap[5])))
+
+
+    #anap.sp=spectral.nap(waves.vec,10^as.numeric(unname(anap.ref)),wl.ref = 412
+    #                     ,S=as.numeric(unname(coef.Anap[5])))
+    anap.0 = mean(spectral.nap(waves0.vec,anap.ref,412,anap.coef.iml4$Snap),na.rm=T)
+    anap = mean(spectral.nap(waves.vec,anap.ref,412,anap.coef.iml4$Snap),na.rm=T)
 
     ######pure water absorption
-    a.w.sp0=spectral.aw(waves0.vec)
-    a.w.sp=spectral.aw(waves.vec)
+    aw.0  <- mean(spectral.aw(waves0.vec))
+    aw    <- mean(spectral.aw(waves.vec))
 
     ######Yellow substances absorption
 
-    ix.490=which.min(abs(as.numeric(unname( coef.Ag[1]))-as.numeric(names(Rrs0))))
-    ix.665=which.min(abs(as.numeric(unname( coef.Ag[2]))-as.numeric(names(Rrs0))))
+    #ix.490=which.min(abs(as.numeric(unname( coef.Ag[1]))-as.numeric(names(Rrs0))))
+    #ix.665=which.min(abs(as.numeric(unname( coef.Ag[2]))-as.numeric(names(Rrs0))))
 
-    R_490.665=Rrs0[ix.490]/Rrs0[ix.665]
-    ag.ref= coef.Ag[4]+ coef.Ag[3]*R_490.665
+#    R_490.665=Rrs0[ix.490]/Rrs0[ix.665]
+ #   ag.ref= coef.Ag[4]+ coef.Ag[3]*R_490.665
 
-    ag.sp0=spectral.cdom(waves0.vec,10^as.numeric(unname(ag.ref)),wl.ref = 400
-                         ,S=as.numeric(unname(coef.Ag[5])))
+    ix.waves1=which.min(abs(ag.coef.iml4$waves1-waves0))
+    ix.waves2=which.min(abs(ag.coef.iml4$waves2-waves0))
 
-    ag.sp=spectral.cdom(waves.vec,10^as.numeric(unname(ag.ref)),wl.ref = 400
-                        ,S=as.numeric(unname(coef.Ag[5])))
+    Ratio <- Rrs0[ix.waves1]/Rrs0[ix.waves2]
+    ag.ref=10^(ag.coef.iml4$intercept+ag.coef.iml4$slope*Ratio)
+
+
+#    ag.sp0=spectral.cdom(waves0.vec,10^as.numeric(unname(ag.ref)),wl.ref = 400
+#                         ,S=as.numeric(unname(coef.Ag[5])))
+
+#    ag.sp=spectral.cdom(waves.vec,10^as.numeric(unname(ag.ref)),wl.ref = 400
+#                        ,S=as.numeric(unname(coef.Ag[5])))
+
+    ag.0 = mean(spectral.cdom(waves0.vec,ag.ref,400,ag.coef.iml4$Sg),na.rm=T)
+    ag = mean(spectral.cdom(waves.vec,ag.ref,400,ag.coef.iml4$Sg),na.rm=T)
 
 
     ######Phyto absorption
 
-    ix.490=which.min(abs(unique(coef.Aph$waves1)-as.numeric(names(Rrs0))))
-    ix.555=which.min(abs(unique(coef.Aph$waves2)-as.numeric(names(Rrs0))))
+    #ix.490=which.min(abs(unique(coef.Aph$waves1)-as.numeric(names(Rrs0))))
+    #ix.555=which.min(abs(unique(coef.Aph$waves2)-as.numeric(names(Rrs0))))
 
-    R_490.555=Rrs0[ix.490]/Rrs0[ix.555]
-    aph.ref= coef.Aph[,3]+ coef.Aph[,2]*R_490.555
+    #R_490.555=Rrs0[ix.490]/Rrs0[ix.555]
+    #aph.ref= coef.Aph[,3]+ coef.Aph[,2]*R_490.555
 
-    ix.wave0.strt.aph=which.min(abs(head(waves0.vec)[1]-coef.Aph$aph.waves))
-    ix.wave0.end.aph=which.min(abs(tail(waves0.vec,n=1)-coef.Aph$aph.waves))
+    #ix.wave0.strt.aph=which.min(abs(head(waves0.vec)[1]-coef.Aph$aph.waves))
+    #ix.wave0.end.aph=which.min(abs(tail(waves0.vec,n=1)-coef.Aph$aph.waves))
 
-    aph.sp0=10^aph.ref[ix.wave0.strt.aph:ix.wave0.end.aph]
+    #aph.sp0=10^aph.ref[ix.wave0.strt.aph:ix.wave0.end.aph]
 
-    ix.wave.strt.aph=which.min(abs(head(waves.vec)[1]-coef.Aph$aph.waves))
-    ix.wave.end.aph=which.min(abs(tail(waves.vec,n=1)-coef.Aph$aph.waves))
+    #ix.wave.strt.aph=which.min(abs(head(waves.vec)[1]-coef.Aph$aph.waves))
+    #ix.wave.end.aph=which.min(abs(tail(waves.vec,n=1)-coef.Aph$aph.waves))
 
-    aph.sp=10^aph.ref[ix.wave.strt.aph:ix.wave.end.aph]
+    #aph.sp=10^aph.ref[ix.wave.strt.aph:ix.wave.end.aph]
+
+    # Compute Aph for the reference wavebands
+    # get index for wavelenght 1
+    # create a matrix with the reference wavelength vector
+    x = matrix(waves0, nrow=length(aph.coef.iml4$aph.waves),ncol=nb.waves0, byrow = T)
+    # compute the difference with the first wavelengnth used in the regression
+    y1 = abs(aph.coef.iml4$waves1 - x)
+    y2 = abs(aph.coef.iml4$waves2 - x)
+
+    # retreived the index
+    ix.waves1 <- apply(y1,1,which.min)
+    ix.waves2 <- apply(y2,1,which.min)
+
+    # compute spectral aph
+    R=Rrs0[ix.waves1]/Rrs0[ix.waves2]
+    aph.spec=  10^(aph.coef.iml4$intercept + aph.coef.iml4$slope * R)
+
+    # Averaged the aph over the wavebands
+    ix.aph0 <- match(waves0.vec, aph.coef.iml4$aph.waves)
+    ix.aph <- match(waves.vec, aph.coef.iml4$aph.waves)
+
+    aph.0 <- mean(aph.spec[ix.aph0],na.rm = T)
+    aph   <- mean(aph.spec[ix.aph],na.rm = T)
 
 
     #####total absorption calculation
-    a.total.lmbd0 = aph.sp0+ag.sp0+a.w.sp0+anap.sp0
-    a.total.lmbd = aph.sp+ag.sp+a.w.sp+anap.sp
+    a.total.0 <-  aph.0 + ag.0 + aw.0 + anap.0
+    a.total   <-  aph   + ag   + aw   + anap
 
 
-    ###
+    ### Compute the bandshift factor that will multiply the Rrs0 to get Rrs
 
+    bb.over.abb   <- bb.total   / (bb.total  +  a.total)
+    bb.over.abb.0 <- bb.total.0 / (bb.total.0+a.total.0)
 
-    bdsh.factor[[i]]=(bb.total.lmbd/(a.total.lmbd0+bb.total.lmbd))*((a.total.lmbd0+bb.total.lmbd0)/bb.total.lmbd0)
+    bdsh.factor[i] <- bb.over.abb / bb.over.abb.0
+
+    #bdsh.factor[[i]]=(bb.total.lmbd/(a.total.lmbd0+bb.total.lmbd))*((a.total.lmbd0+bb.total.lmbd0)/bb.total.lmbd0)
 
   }
-  names(bdsh.factor) = as.character(waves)
+  #names(bdsh.factor) = as.character(waves)
   return(bdsh.factor)
 
 }

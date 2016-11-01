@@ -73,12 +73,11 @@ Tilt_threshold = 10
 band.width=rep(10,7)
 waves2= c(560,665,681)
 band.width2 = rep(10,3)
-PI="Simon_Belanger",
-PI_Email ="sbe@arctus.ca",
-land_dist_IS = 20,
-PQC = "P000010000",
+PI="Simon_Belanger"
+PI_Email ="sbe@arctus.ca"
+land_dist_IS = 20
+PQC = "P000010000"
 MQC="M110111001101020200"
-
 
 
 #Define output dir

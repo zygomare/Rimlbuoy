@@ -3,7 +3,8 @@
 \name{get.bandshift.coefficient}
 \alias{get.bandshift.coefficient}
 \title{Get bandshift coefficient to remote sensing reflectance data from
-the IML (VIKING) buoys using Zibordi et al (2009) algorithm}
+the IML (VIKING) buoys using the approache modified from
+ Zibordi et al (2009)}
 \usage{
 get.bandshift.coefficient(Rrs0, waves0, band.width0, waves, band.width)
 }
@@ -25,7 +26,8 @@ the sequence center on the targeted wavelength (bandwith dependant).
 }
 \description{
 Get bandshift coefficient to remote sensing reflectance data from
-the IML (VIKING) buoys using Zibordi et al (2009) algorithm
+the IML (VIKING) buoys using the approache modified from
+ Zibordi et al (2009)
 }
 \details{
 The correction use the coefficient of the linear regression between
