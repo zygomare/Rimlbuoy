@@ -9,9 +9,9 @@
 #' @param band.width : bandwidth of a target wavelength (numeric vector).
 #'
 #'
-#' @return Return list of data with the bandshift coefficient The length of
+#' @return Return list of data with the bandshift coefficient the length of
 #' the list is the length of the reference wavelength. Each element have the length of
-#' the sequence center on the targeted wavelength (bandwith dependant).
+#' the bandwith center on the targeted wavelength.
 #'
 #' @details The correction use the coefficient of the linear regression between
 #' in-situ remote sensing ratio and in-situ IOP measurement of bbp, Ag, A_{nap},
