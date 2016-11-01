@@ -1,5 +1,6 @@
 #' Get bandshift coefficient to remote sensing reflectance data from
-#' the IML (VIKING) buoys using Zibordi et al (2009) algorithm
+#' the IML (VIKING) buoys using the approache modified from
+#'  Zibordi et al (2009)
 #
 #'
 #' @param Rrs0 : reference remote sensing reflectance that need to be coorected for bandshift (numeric vector).
@@ -9,9 +10,9 @@
 #' @param band.width : bandwidth of a target wavelength (numeric vector).
 #'
 #'
-#' @return Return list of data with the bandshift coefficient the length of
+#' @return Return list of data with the bandshift coefficient The length of
 #' the list is the length of the reference wavelength. Each element have the length of
-#' the bandwith center on the targeted wavelength.
+#' the sequence center on the targeted wavelength (bandwith dependant).
 #'
 #' @details The correction use the coefficient of the linear regression between
 #' in-situ remote sensing ratio and in-situ IOP measurement of bbp, Ag, A_{nap},
@@ -63,10 +64,15 @@ get.bandshift.coefficient <- function(Rrs0,
                                        waves,
                                        band.width) {
 
-  load(paste(path.package("Rimlbuoy"),"/data/coef.Anap.Rdata",sep=""))
-  load(paste(path.package("Rimlbuoy"),"/data/coef.Ag.Rdata",sep=""))
-  load(paste(path.package("Rimlbuoy"),"/data/coef.Aph.Rdata",sep=""))
-  load(paste(path.package("Rimlbuoy"),"/data/coef.bbp.Rdata",sep=""))
+# Ces lignes ne sont pas nécessaires car les données RData du dossier /data/
+# sont automatiquement chargés avec library("Rimlbuoy")
+  # Par contre j'ai du changer les noms des fichiers car "coef" est une fonction
+  # de la distribution R qui entrait en conflit.
+  # D'ailleurs tu verras que nul part on load("data/mr.coeff.epsilon.r2.adj.RData")
+#  load(paste(path.package("Rimlbuoy"),"/data/coef.Anap.Rdata",sep=""))
+#  load(paste(path.package("Rimlbuoy"),"/data/coef.Ag.Rdata",sep=""))
+#  load(paste(path.package("Rimlbuoy"),"/data/coef.Aph.Rdata",sep=""))
+#  load(paste(path.package("Rimlbuoy"),"/data/coef.bbp.Rdata",sep=""))
 
   nb.waves0 = length(waves0)
 
@@ -87,7 +93,7 @@ get.bandshift.coefficient <- function(Rrs0,
   }
 
   ####create empty list for collecting result
-  bdsh.factor=list()
+  bdsh.factor <- rep(NA, nb.waves)
   ###
 
   #### Run over each wavelength
@@ -99,28 +105,41 @@ get.bandshift.coefficient <- function(Rrs0,
     waves0.vec = (waves0[ix.waves0]-band.width0[ix.waves0]/2):(waves0[ix.waves0]+band.width0[ix.waves0]/2)
     waves.vec =  (waves[i]-band.width[i]/2):(waves[i]+band.width[i]/2)
 
-    ####section total scattering
+    ####section total backscattering
     ####backscattering calculation
-    ix.490=which.min(abs(as.numeric(unname(coef.bbp[1]))-as.numeric(names(Rrs0))))
-    ix.555=which.min(abs(as.numeric(unname(coef.bbp[2]))-as.numeric(names(Rrs0))))
+    # Les longueurs sont stockés dans les données RData justement pour
+    # que si on venait à longueur d'onde régression on n'aurait pas
+    # à toucher au code...
+    #
+    #ix.490=which.min(abs(as.numeric(unname(coef.bbp[1]))-as.numeric(names(Rrs0))))
+    #ix.555=which.min(abs(as.numeric(unname(coef.bbp[2]))-as.numeric(names(Rrs0))))
+    ix.waves1=which.min(abs(bbp.coef.iml4$waves1-as.numeric(names(Rrs0))))
+    ix.waves2=which.min(abs(bbp.coef.iml4$waves2-as.numeric(names(Rrs0))))
 
-    R_490.555=Rrs0[ix.490]/Rrs0[ix.555]
-    bbp.ref=coef.bbp[4]+coef.bbp[3]*R_490.555
+    #R_490.555=Rrs0[ix.490]/Rrs0[ix.555]
+    Ratio <- Rrs0[ix.waves1]/Rrs0[ix.waves2]
+    #bbp.ref=coef.bbp[4]+coef.bbp[3]*R_490.555
+    bbp.ref=10^(bbp.coef.iml4$intercept+bbp.coef.iml4$slope*Ratio)
 
-    bbp.sp0=spectral.bbp(waves0.vec,10^as.numeric(unname(bbp.ref)),wl.ref = 532
-                         ,nu=as.numeric(unname(coef.bbp[5])))
+    # Je ne comprends pas pourquoi tu utilise as.numeric(unname(bbp.ref))
+    # Cela alourdit inutilement le code.
+    # Deuxièment pas besoin de trainer le spectre de bbp
+    # On peut moyenner sur la bande...
+    #bbp.sp0=spectral.bbp(waves0.vec,10^as.numeric(unname(bbp.ref)),wl.ref = 532
+    #                     ,nu=as.numeric(unname(coef.bbp[5])))
+    #bbp.sp=spectral.bbp(waves.vec,10^as.numeric(unname(bbp.ref)),wl.ref = 532
+    #                    ,nu=as.numeric(unname(coef.bbp[5])))
+    bbp.0=mean(spectral.bbp(waves0.vec,bbp.ref,532, bbp.coef.iml4$Sbp),na.rm=T)
+    bbp=mean(spectral.bbp(waves.vec,bbp.ref,532, bbp.coef.iml4$Sbp),na.rm=T)
 
-    bbp.sp=spectral.bbp(waves.vec,10^as.numeric(unname(bbp.ref)),wl.ref = 532
-                        ,nu=as.numeric(unname(coef.bbp[5])))
 
     #####water scattering
-    bb.w.sp0=spectral.bw(waves0.vec)
-    bb.w.sp=spectral.bw(waves.vec)
-
+    bbw.0=mean(spectral.bw(waves0.vec))
+    bbw=mean(spectral.bw(waves.vec))
 
     #####total back scattering calculation
-    bb.total.lmbd0=bb.w.sp0+bbp.sp0
-    bb.total.lmbd=bb.w.sp+bbp.sp
+    bb.total.0 <- bbw.0+bbp.0
+    bb.total   <- bbw  +bbp
 
     ###
     ####total absorption section
@@ -142,7 +161,7 @@ get.bandshift.coefficient <- function(Rrs0,
     a.w.sp0=spectral.aw(waves0.vec)
     a.w.sp=spectral.aw(waves.vec)
 
-    ######Yellow absorption
+    ######Yellow substances absorption
 
     ix.490=which.min(abs(as.numeric(unname( coef.Ag[1]))-as.numeric(names(Rrs0))))
     ix.665=which.min(abs(as.numeric(unname( coef.Ag[2]))-as.numeric(names(Rrs0))))
