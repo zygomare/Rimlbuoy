@@ -30,7 +30,7 @@
 #'
 #' #read an optical data file from IML Buoy
 #'setwd(path.package("Rimlbuoy"))
-#'raw = read.OPTICD("data/IML-4_OPTICD_20160501_000320.DAT")
+#'raw = read.OPTICD("extdata/IML-4_OPTICD_20160501_000320.DAT")
 #'
 #' # select an indice. here 65 is 16:30 GMT or 12:30 t local time
 #'ix = 65

@@ -22,7 +22,7 @@
 #' @examples
 #' # read an optical data file from IML Buoy dat file
 #' setwd(path.package("Rimlbuoy"))
-#' raw = read.PAR_DIGI("data/IML-")
+#' raw = read.PAR_DIGI("extdata/IML-")
 #' str(raw)
 #'
 #'

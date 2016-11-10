@@ -38,7 +38,7 @@ Reads meteo data coming from IML Buoy and returns a list of field containing all
 \examples{
 # read an SD data file from IML Buoy dat file
 setwd(path.package("Rimlbuoy"))
-raw = read.SD("data/IML-4_SD_20160501_000300.DAT")
+raw = read.SD("extdata/IML-4_SD_20160501_000300.DAT")
 str(raw)
 
 

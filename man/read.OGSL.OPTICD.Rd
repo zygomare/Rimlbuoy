@@ -43,7 +43,7 @@ read.OPTICD in the Rimlbuoy package
 \examples{
 # read an optical data file from IML Buoy ODF file
 setwd(path.package("Rimlbuoy"))
-raw = read.OGSL.OPTICD("data/MMOB_BOUEE2013_RIMOUSKI_IML4_OPTICD.ODF")
+raw = read.OGSL.OPTICD("extdata/MMOB_BOUEE2013_RIMOUSKI_IML4_OPTICD.ODF")
 str(raw)
 
 

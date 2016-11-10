@@ -40,7 +40,7 @@
 #' @examples
 #'#Define file names
 #'setwd(path.package("Rimlbuoy"))
-#'pathwd=""data/""
+#'pathwd="extdata/"
 #'fnames = list.files(pathwd,full.names = T)
 #'fn=fnames[grep("OPTICD",fnames)]
 #'
@@ -58,7 +58,7 @@
 #
 #'
 #'#Define output dir
-#' output_dir_data="./data/"
+#' output_dir_data="extdata/"
 #'
 #'#Run write.to.MERMAID
 #'res = write.to.MERMAID(OPTICD_fname=fn,outputdir=output_dir_data,Tilt_threshold=Tilt_threshold)
@@ -240,6 +240,7 @@ write.to.MERMAID <- function(OPTICD_fname,
 
       ######Make bandshift correction
 
+        if (complete) { #get info if the data is complete
         if (USE.BANDSHIFT.COEF) {
           bandshift.fact=get.bandshift.coefficient(res$Rrs,raw$waves,band.width,waves2,band.width2)
 
@@ -253,6 +254,14 @@ write.to.MERMAID <- function(OPTICD_fname,
 
         }else{
           print("DO NOT apply bandshift coefficient")
+        }
+
+           } else { # If it is not complete the variable will take NA values
+          # The processing will continue with no error
+          print("Some data is missing")
+          print(raw$Ed0p[i,])
+          print(raw$Lu0.86m[i,])
+
         }
 
       } else { # If it is not complete the variable will take NA values
@@ -321,7 +330,7 @@ write.to.MERMAID <- function(OPTICD_fname,
     if (USE.BANDSHIFT.COEF){
 
 
-      for (i in c(1:length(bandshift.fact))){
+      for (i in c(1:length(waves2))){
         ix.wl=which.min(abs(waves2[i]-raw$waves))
         waves.fin[ix.wl]=waves2[i]
       }

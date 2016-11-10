@@ -44,7 +44,7 @@ fluorescence (FDOM and FCHL), GPS, and tilt and heading information.
 \examples{
 # read an optical data file from IML Buoy dat file
 setwd(path.package("Rimlbuoy"))
-raw = read.OPTICD("data/IML-4_OPTICD_20160501_000320.DAT")
+raw = read.OPTICD("extdata/IML-4_OPTICD_20160501_00032")
 str(raw)
 
 

@@ -53,7 +53,7 @@ bandshift corrections.
 
 #read an optical data file from IML Buoy
 setwd(path.package("Rimlbuoy"))
-raw = read.OPTICD("data/IML-4_OPTICD_20160501_000320.DAT")
+raw = read.OPTICD("extdata/IML-4_OPTICD_20160501_000320.DAT")
 
 #
 waves0=c(412,443,490,510,555,670, 683)
