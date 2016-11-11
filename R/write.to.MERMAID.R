@@ -40,7 +40,7 @@
 #' @examples
 #'#Define file names
 #'setwd(path.package("Rimlbuoy"))
-#'pathwd=""data/""
+#'pathwd="extdata/"
 #'fnames = list.files(pathwd,full.names = T)
 #'fn=fnames[grep("OPTICD",fnames)]
 #'
@@ -58,7 +58,7 @@
 #
 #'
 #'#Define output dir
-#' output_dir_data="./data/"
+#' output_dir_data="extdata/"
 #'
 #'#Run write.to.MERMAID
 #'res = write.to.MERMAID(OPTICD_fname=fn,outputdir=output_dir_data,Tilt_threshold=Tilt_threshold)
@@ -240,23 +240,28 @@ write.to.MERMAID <- function(OPTICD_fname,
 
       ######Make bandshift correction
 
+        if (complete) { #get info if the data is complete
         if (USE.BANDSHIFT.COEF) {
-          bandshift.fact=unlist(lapply(get.bandshift.coefficient(res$Rrs,raw$waves,band.width,waves2,band.width2),mean,na.rm=T))
+          bandshift.fact=get.bandshift.coefficient(res$Rrs,raw$waves,band.width,waves2,band.width2)
 
-          for (i in c(1:length(bandshift.fact))){
+          for (i in c(1:length(waves2))){
 
-            ix.wl=which.min(abs(as.numeric(names(bandshift.fact)[i])-as.numeric(names(res$rho_wn))))
-            ix.wl.thullier=which.min(abs(as.numeric(names(bandshift.fact)[i])-thuillier.completed.by.AM0AM1$wave))
-            ix.wl0.thullier=which.min(abs(as.numeric(names(res$rho_wn)[ix.wl])-thuillier.completed.by.AM0AM1$wave))
-
-            ratio.thuillier=(thuillier.completed.by.AM0AM1$F0[ix.wl.thullier]/thuillier.completed.by.AM0AM1$F0[ix.wl0.thullier])
+            ix.wl=which.min(abs(waves2[i]-raw$waves))
 
             rho_wn[igood.rec, ix.wl]=rho_wn[igood.rec,ix.wl]*bandshift.fact[i]
-            nLw[igood.rec,ix.wl ]=nLw[igood.rec, ix.wl]*ratio.thuillier*bandshift.fact[i]
+            nLw[igood.rec,ix.wl ]=nLw[igood.rec, ix.wl]*bandshift.fact[i]
           }
 
         }else{
           print("DO NOT apply bandshift coefficient")
+        }
+
+           } else { # If it is not complete the variable will take NA values
+          # The processing will continue with no error
+          print("Some data is missing")
+          print(raw$Ed0p[i,])
+          print(raw$Lu0.86m[i,])
+
         }
 
       } else { # If it is not complete the variable will take NA values
@@ -325,7 +330,7 @@ write.to.MERMAID <- function(OPTICD_fname,
     if (USE.BANDSHIFT.COEF){
 
 
-      for (i in c(1:length(bandshift.fact))){
+      for (i in c(1:length(waves2))){
         ix.wl=which.min(abs(waves2[i]-raw$waves))
         waves.fin[ix.wl]=waves2[i]
       }

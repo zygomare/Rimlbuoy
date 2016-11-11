@@ -28,7 +28,7 @@
 #' @examples
 #' # read an optical data file from IML Buoy dat file
 #' setwd(path.package("Rimlbuoy"))
-#' raw = read.OCR_MED("data/IML-4_OCR_MED_20160501_000320.DAT")
+#' raw = read.OCR_MED("extdata/IML-4_OCR_MED_20160501_000320.DAT")
 #' str(raw)
 #'
 #'

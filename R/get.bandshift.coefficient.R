@@ -41,7 +41,7 @@
 #'
 #' #read an optical data file from IML Buoy
 #' setwd(path.package("Rimlbuoy"))
-#' raw = read.OPTICD("data/IML-4_OPTICD_20160501_000320.DAT")
+#' raw = read.OPTICD("extdata/IML-4_OPTICD_20160501_000320.DAT")
 #'
 #' #
 #' waves0=c(412,443,490,510,555,670, 683)
@@ -67,15 +67,7 @@ get.bandshift.coefficient <- function(Rrs0,
                                        waves,
                                        band.width) {
 
-# Ces lignes ne sont pas nécessaires car les données RData du dossier /data/
-# sont automatiquement chargés avec library("Rimlbuoy")
-  # Par contre j'ai du changer les noms des fichiers car "coef" est une fonction
-  # de la distribution R qui entrait en conflit.
-  # D'ailleurs tu verras que nul part on load("data/mr.coeff.epsilon.r2.adj.RData")
-#  load(paste(path.package("Rimlbuoy"),"/data/coef.Anap.Rdata",sep=""))
-#  load(paste(path.package("Rimlbuoy"),"/data/coef.Ag.Rdata",sep=""))
-#  load(paste(path.package("Rimlbuoy"),"/data/coef.Aph.Rdata",sep=""))
-#  load(paste(path.package("Rimlbuoy"),"/data/coef.bbp.Rdata",sep=""))
+
 
   nb.waves0 = length(waves0)
 
@@ -110,28 +102,14 @@ get.bandshift.coefficient <- function(Rrs0,
 
     ####section total backscattering
     ####backscattering calculation
-    # Les longueurs sont stockés dans les données RData justement pour
-    # que si on venait à longueur d'onde régression on n'aurait pas
-    # à toucher au code...
-    #
-    #ix.490=which.min(abs(as.numeric(unname(coef.bbp[1]))-as.numeric(names(Rrs0))))
-    #ix.555=which.min(abs(as.numeric(unname(coef.bbp[2]))-as.numeric(names(Rrs0))))
     ix.waves1=which.min(abs(bbp.coef.iml4$waves1-waves0))
     ix.waves2=which.min(abs(bbp.coef.iml4$waves2-waves0))
 
-    #R_490.555=Rrs0[ix.490]/Rrs0[ix.555]
+
     Ratio <- Rrs0[ix.waves1]/Rrs0[ix.waves2]
     #bbp.ref=coef.bbp[4]+coef.bbp[3]*R_490.555
     bbp.ref=10^(bbp.coef.iml4$intercept+bbp.coef.iml4$slope*Ratio)
 
-    # Je ne comprends pas pourquoi tu utilise as.numeric(unname(bbp.ref))
-    # Cela alourdit inutilement le code.
-    # Deuxièment pas besoin de trainer le spectre de bbp
-    # On peut moyenner sur la bande...
-    #bbp.sp0=spectral.bbp(waves0.vec,10^as.numeric(unname(bbp.ref)),wl.ref = 532
-    #                     ,nu=as.numeric(unname(coef.bbp[5])))
-    #bbp.sp=spectral.bbp(waves.vec,10^as.numeric(unname(bbp.ref)),wl.ref = 532
-    #                    ,nu=as.numeric(unname(coef.bbp[5])))
     bbp.0=mean(spectral.bbp(waves0.vec,bbp.ref,532, bbp.coef.iml4$Sbp),na.rm=T)
     bbp=mean(spectral.bbp(waves.vec,bbp.ref,532, bbp.coef.iml4$Sbp),na.rm=T)
 
@@ -148,23 +126,12 @@ get.bandshift.coefficient <- function(Rrs0,
     ####total absorption section
 
     ####Anap Absorption
-    #ix.490=which.min(abs(as.numeric(unname(coef.Anap[1]))-as.numeric(names(Rrs0))))
-    #ix.665=which.min(abs(as.numeric(unname(coef.Anap[2]))-as.numeric(names(Rrs0))))
     ix.waves1=which.min(abs(anap.coef.iml4$waves1-waves0))
     ix.waves2=which.min(abs(anap.coef.iml4$waves2-waves0))
 
-    #R_490.665=Rrs0[ix.490]/Rrs0[ix.665]
-    #anap.ref=coef.Anap[4]+coef.Anap[3]*R_490.665
     Ratio <- Rrs0[ix.waves1]/Rrs0[ix.waves2]
     anap.ref=10^(anap.coef.iml4$intercept+anap.coef.iml4$slope*Ratio)
 
-
-    #anap.sp0=spectral.nap(waves0.vec,10^as.numeric(unname(anap.ref)),wl.ref = 412
-    #                      ,S=as.numeric(unname(coef.Anap[5])))
-
-
-    #anap.sp=spectral.nap(waves.vec,10^as.numeric(unname(anap.ref)),wl.ref = 412
-    #                     ,S=as.numeric(unname(coef.Anap[5])))
     anap.0 = mean(spectral.nap(waves0.vec,anap.ref,412,anap.coef.iml4$Snap),na.rm=T)
     anap = mean(spectral.nap(waves.vec,anap.ref,412,anap.coef.iml4$Snap),na.rm=T)
 
@@ -173,48 +140,17 @@ get.bandshift.coefficient <- function(Rrs0,
     aw    <- mean(spectral.aw(waves.vec))
 
     ######Yellow substances absorption
-
-    #ix.490=which.min(abs(as.numeric(unname( coef.Ag[1]))-as.numeric(names(Rrs0))))
-    #ix.665=which.min(abs(as.numeric(unname( coef.Ag[2]))-as.numeric(names(Rrs0))))
-
-#    R_490.665=Rrs0[ix.490]/Rrs0[ix.665]
- #   ag.ref= coef.Ag[4]+ coef.Ag[3]*R_490.665
-
     ix.waves1=which.min(abs(ag.coef.iml4$waves1-waves0))
     ix.waves2=which.min(abs(ag.coef.iml4$waves2-waves0))
 
     Ratio <- Rrs0[ix.waves1]/Rrs0[ix.waves2]
     ag.ref=10^(ag.coef.iml4$intercept+ag.coef.iml4$slope*Ratio)
 
-
-#    ag.sp0=spectral.cdom(waves0.vec,10^as.numeric(unname(ag.ref)),wl.ref = 400
-#                         ,S=as.numeric(unname(coef.Ag[5])))
-
-#    ag.sp=spectral.cdom(waves.vec,10^as.numeric(unname(ag.ref)),wl.ref = 400
-#                        ,S=as.numeric(unname(coef.Ag[5])))
-
     ag.0 = mean(spectral.cdom(waves0.vec,ag.ref,400,ag.coef.iml4$Sg),na.rm=T)
     ag = mean(spectral.cdom(waves.vec,ag.ref,400,ag.coef.iml4$Sg),na.rm=T)
 
 
     ######Phyto absorption
-
-    #ix.490=which.min(abs(unique(coef.Aph$waves1)-as.numeric(names(Rrs0))))
-    #ix.555=which.min(abs(unique(coef.Aph$waves2)-as.numeric(names(Rrs0))))
-
-    #R_490.555=Rrs0[ix.490]/Rrs0[ix.555]
-    #aph.ref= coef.Aph[,3]+ coef.Aph[,2]*R_490.555
-
-    #ix.wave0.strt.aph=which.min(abs(head(waves0.vec)[1]-coef.Aph$aph.waves))
-    #ix.wave0.end.aph=which.min(abs(tail(waves0.vec,n=1)-coef.Aph$aph.waves))
-
-    #aph.sp0=10^aph.ref[ix.wave0.strt.aph:ix.wave0.end.aph]
-
-    #ix.wave.strt.aph=which.min(abs(head(waves.vec)[1]-coef.Aph$aph.waves))
-    #ix.wave.end.aph=which.min(abs(tail(waves.vec,n=1)-coef.Aph$aph.waves))
-
-    #aph.sp=10^aph.ref[ix.wave.strt.aph:ix.wave.end.aph]
-
     # Compute Aph for the reference wavebands
     # get index for wavelenght 1
     # create a matrix with the reference wavelength vector
@@ -251,10 +187,7 @@ get.bandshift.coefficient <- function(Rrs0,
 
     bdsh.factor[i] <- bb.over.abb / bb.over.abb.0
 
-    #bdsh.factor[[i]]=(bb.total.lmbd/(a.total.lmbd0+bb.total.lmbd))*((a.total.lmbd0+bb.total.lmbd0)/bb.total.lmbd0)
-
   }
-  #names(bdsh.factor) = as.character(waves)
   return(bdsh.factor)
 
 }

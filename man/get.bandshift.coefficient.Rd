@@ -2,9 +2,7 @@
 % Please edit documentation in R/get.bandshift.coefficient.R
 \name{get.bandshift.coefficient}
 \alias{get.bandshift.coefficient}
-\title{Get bandshift coefficient to remote sensing reflectance data from
-the IML (VIKING) buoys using the approache modified from
- Zibordi et al (2009)}
+\title{Get bandshift coefficient to correct remote sensing reflectance.}
 \usage{
 get.bandshift.coefficient(Rrs0, waves0, band.width0, waves, band.width)
 }
@@ -20,14 +18,15 @@ get.bandshift.coefficient(Rrs0, waves0, band.width0, waves, band.width)
 \item{band.width}{: bandwidth of a target wavelength (numeric vector).}
 }
 \value{
-Return list of data with the bandshift coefficient The length of
+Return bandshift coefficients that need to be apply to  The length of
 the list is the length of the reference wavelength. Each element have the length of
 the sequence center on the targeted wavelength (bandwith dependant).
 }
 \description{
-Get bandshift coefficient to remote sensing reflectance data from
-the IML (VIKING) buoys using the approache modified from
- Zibordi et al (2009)
+Some of the differences in remote sensing reflectance between sensors
+ result from differences in wavebands characteristic (spectral and band width).
+ The method is modified from Zibordi et al (2009) based on empirical relationships
+ determined in the St Lawrence Estuary.
 }
 \details{
 The correction use the coefficient of the linear regression between
@@ -54,7 +53,7 @@ bandshift corrections.
 
 #read an optical data file from IML Buoy
 setwd(path.package("Rimlbuoy"))
-raw = read.OPTICD("data/IML-4_OPTICD_20160501_000320.DAT")
+raw = read.OPTICD("extdata/IML-4_OPTICD_20160501_000320.DAT")
 
 #
 waves0=c(412,443,490,510,555,670, 683)

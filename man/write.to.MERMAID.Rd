@@ -64,7 +64,7 @@ data frame is formated with MERMAID header.
 \examples{
 #Define file names
 setwd(path.package("Rimlbuoy"))
-pathwd=""data/""
+pathwd="extdata/"
 fnames = list.files(pathwd,full.names = T)
 fn=fnames[grep("OPTICD",fnames)]
 
@@ -81,7 +81,7 @@ MQC="M110111001101020200"
 
 
 #Define output dir
-output_dir_data="./data/"
+output_dir_data="extdata/"
 
 #Run write.to.MERMAID
 res = write.to.MERMAID(OPTICD_fname=fn,outputdir=output_dir_data,Tilt_threshold=Tilt_threshold)
