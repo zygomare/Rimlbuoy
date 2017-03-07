@@ -28,8 +28,10 @@ read.OCR3<- function(filen) {
   close(con)
 
   nrec = length(data)
+  ncolumn=length(unlist(strsplit(data[nrec], ",")))
+  
   tmp=unlist(strsplit(data, ","))
-  tmp.mat = as.data.frame(matrix(tmp, ncol=20, nrow=nrec, byrow=T))
+  tmp.mat = as.data.frame(matrix(tmp, ncol=ncolumn, nrow=nrec, byrow=T))
 
   DateTime = as.POSIXct(paste(tmp.mat$V1, tmp.mat$V2), format="%Y/%m/%d %H:%M:%S", tz="GMT")
   DOY = as.numeric(levels(tmp.mat$V3)[tmp.mat$V3])

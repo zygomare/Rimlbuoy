@@ -1,7 +1,7 @@
 Package: Rimlbuoy
 Type: Package
 Title: IML buoy data processing routines
-Version: 0.3-2
+Version: 0.3-3
 Date: 2016-11-03
 Author: Simon Bélanger
 Maintainer: Thomas Jaegler <tj@arctus.ca> and Simon Bélanger <sbe@arctus.ca>

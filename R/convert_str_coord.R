@@ -17,7 +17,7 @@
 convert_str_coord<-function(c){
 
 
-  z <- sapply((strsplit(c, "[Â°\\.\\']")), as.numeric)
+  z<- sapply((strsplit(c, "[Â°\\.\\']")), as.numeric)
   if(is.na(z[1])){
 
     return(rep("NA",length(z)))

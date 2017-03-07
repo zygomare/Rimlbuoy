@@ -29,7 +29,7 @@
 #' @param band.width2 : bandwidth of a target wavelength (numeric vector).
 #' @details This function reads the data file provided as input,
 #' apply quality control checks and then compute Rrs using \code{\link{compute.Rrs.from.buoy}}.
-#' Next ìf USE.BANDSHIFT.COEF is true, the bandshift correction is apply to nlw and rho_w. Then the
+#' Next ìf USE.BANDSHIFT.COEF is true, the bandshift correction is apply to Lw and rho_w. Then the
 #' flags for coefficient of variation (<20%) and tilt (<10°) are identified and excluded. Then the final
 #' data frame is formated with MERMAID header.
 #'
@@ -69,24 +69,24 @@
 #'
 #' @author Thomas Jaegler modified by Simon Belanger
 
-write.to.MERMAID <- function(OPTICD_fname,
-                                outputdir,
-                                Tilt_threshold=10,
-                                USE.MEDIAN=FALSE,
-                                PI,
-                                PI_Email,
-                                land_dist_IS,
-                                PQC,
-                                MQC,
-                                USE.BANDSHIFT.COEF=TRUE,
-                                band.width,
-                                waves2,
-                                band.width2) {
+test.write.to.MERMAID <- function(OPTICD_fname,
+                             outputdir,
+                             Tilt_threshold=10,
+                             USE.MEDIAN=FALSE,
+                             PI,
+                             PI_Email,
+                             land_dist_IS,
+                             PQC,
+                             MQC,
+                             USE.BANDSHIFT.COEF=TRUE,
+                             band.width,
+                             waves2,
+                             band.width2) {
 
   # Extract information from the file name
   base = basename(OPTICD_fname)
   inpath = dirname(OPTICD_fname)
-  BuoyID = paste(str_sub(base,1,3),str_sub(base,5,5),sep="")
+  BuoyID = paste(str_sub(base,1,4),str_sub(base,5,5),sep="")
   idexdat= str_sub(base,13,28)
   #######
 
@@ -193,18 +193,33 @@ write.to.MERMAID <- function(OPTICD_fname,
   #Make Dark correction
   ####
   if (USE.MEDIAN) {
-    dark.med.Lu=raw_med$Lu0.86m[i,]-dark.read.med.Lu
+    dark.med.Lu=raw_med$Lu0.86m-dark.read.med.Lu
   }else{
     dark.Lu=raw$Lu0.86m-dark.read.Lu
   }
   ###
+
+  #####Calculate coefficient of variation for Ed and define new variable for Ed_flag
+   Ed0p.cv <- raw$Ed0p.sd[ix.good,]/raw$Ed0p[ix.good,]
+   Ed0p.cv.flag <- Ed0p.cv > 0.2
+  #######
+
+  ######Calculate coefficient of variation for Lu and define new variable for Lu_flag
+   Lu0.86m.cv <- raw$Lu0.86m.sd[ix.good,]/dark.Lu[ix.good,]
+   Lw.cv.flag <- Lu0.86m.cv > 0.2 | is.na(Lu0.86m.cv)
+  ###################
+  ######### Detect tilt above threshold and create variable flag
+   tilt.flag <- raw$tilt[ix.good] > Tilt_threshold
+   ###################
+
+
 
   # If there is any data within the two hours before or after the Solar Noon proceed, otherwise stop processing
   if (ngood > 1) {
     # Create matrices or vectors to store the data
     rho_wn = matrix(NA, ncol=7, nrow=ngood)
     sunzen = rep(NA, ngood)
-    nLw = matrix(NA, ncol=7, nrow=ngood)
+    Lw = matrix(NA, ncol=7, nrow=ngood)
 
 
     # Loop on each record between solar noon +/- 2 hours
@@ -235,28 +250,28 @@ write.to.MERMAID <- function(OPTICD_fname,
                                            raw$lat[i])
 
         rho_wn[igood.rec, ] <- res$rho_wn
-        nLw[igood.rec, ] <- res$nLw
+        Lw[igood.rec, ] <- res$Lw
         sunzen[igood.rec] <- res$sunzen
 
-      ######Make bandshift correction
+        ######Make bandshift correction
 
         if (complete) { #get info if the data is complete
-        if (USE.BANDSHIFT.COEF) {
-          bandshift.fact=get.bandshift.coefficient(res$Rrs,raw$waves,band.width,waves2,band.width2)
+          if (USE.BANDSHIFT.COEF) {
+            bandshift.fact=get.bandshift.coefficient(res$Rrs,raw$waves,band.width,waves2,band.width2)
 
-          for (i in c(1:length(waves2))){
+            for (i in c(1:length(waves2))){
 
-            ix.wl=which.min(abs(waves2[i]-raw$waves))
+              ix.wl=which.min(abs(waves2[i]-raw$waves))
 
-            rho_wn[igood.rec, ix.wl]=rho_wn[igood.rec,ix.wl]*bandshift.fact[i]
-            nLw[igood.rec,ix.wl ]=nLw[igood.rec, ix.wl]*bandshift.fact[i]
+              rho_wn[igood.rec, ix.wl]=rho_wn[igood.rec,ix.wl]*bandshift.fact[i]
+              Lw[igood.rec,ix.wl ]=Lw[igood.rec, ix.wl]*bandshift.fact[i]
+            }
+
+          }else{
+            print("DO NOT apply bandshift coefficient")
           }
 
-        }else{
-          print("DO NOT apply bandshift coefficient")
-        }
-
-           } else { # If it is not complete the variable will take NA values
+        } else { # If it is not complete the variable will take NA values
           # The processing will continue with no error
           print("Some data is missing")
           print(raw$Ed0p[i,])
@@ -273,19 +288,7 @@ write.to.MERMAID <- function(OPTICD_fname,
       }
     }
 
-    #####Calculate coefficient of variation for Ed and define new variable for Ed_flag
-    Ed0p.cv <- raw$Ed0p.sd[ix.good,]/raw$Ed0p[ix.good,]
-    Ed0p.cv.flag <- Ed0p.cv > 0.2
-    #######
 
-    ######Calculate coefficient of variation for Lu and define new variable for Lu_flag
-    Lu0.86m.cv <- raw$Lu0.86m.sd[ix.good,]/dark.Lu[ix.good,]
-    Lw.cv.flag <- Lu0.86m.cv > 0.2 | is.na(Lu0.86m.cv)
-    ###################
-
-    ######### Detect tilt above threshold and create variable flag
-    tilt.flag <- raw$tilt[ix.good] > Tilt_threshold
-    ###########
 
     #make some necesary Header ID for Mermaid submission
     MATCHUP_ID = paste(BuoyID,"_0",seq(1,length.out = length(raw$DateTime[ix.good])),"_",idexdat,sep="")
@@ -297,13 +300,13 @@ write.to.MERMAID <- function(OPTICD_fname,
 
 
     if (nchar(PQC) == 10){
-    PQC = rep(PQC,length(raw$DateTime[ix.good]))
+      PQC = rep(PQC,length(raw$DateTime[ix.good]))
     }else{
       print("Something wrong with PQC flags see Mermaid data format.")
     }
 
     if (nchar(MQC) == 19){
-    MQC=  rep(MQC,length(raw$DateTime[ix.good]))
+      MQC=  rep(MQC,length(raw$DateTime[ix.good]))
     }else{
       print("Something wrong with MQC flags see Mermaid data format.")
     }
@@ -318,7 +321,7 @@ write.to.MERMAID <- function(OPTICD_fname,
                          land_dist_IS,
                          sunzen,
                          Ed0p=raw$Ed0p[ix.good,],
-                         nLw,
+                         Lw,
                          rho_wn,
                          raw$tilt[ix.good],
                          raw$FCHL[ix.good],
@@ -334,23 +337,23 @@ write.to.MERMAID <- function(OPTICD_fname,
         ix.wl=which.min(abs(waves2[i]-raw$waves))
         waves.fin[ix.wl]=waves2[i]
       }
-    # add names to the data frame # this is the most complicated part of the code!
-    colnames(result.df) = c("MATCHUP_ID","Site","PI","PI(s)_Email","Lat_IS", "Lon_IS",
-                            "TIME_IS",
-                            "PQC",
-                            "MQC",
-                            "land_dist_IS",
-                            "thetas IS",
-                            paste("Es_IS",raw$waves,sep="_"),
-                            paste("LwN_IS",waves.fin,sep="_"),
-                            paste("rho_w_IS",waves.fin,sep="_"),
-                            "tilt",
-                            "Fluor_chla_IS",
-                            "Fluor_cdom_IS",
-                            paste("Es_IS.cv.flag",waves.fin,sep="_"),
-                            paste("LwN_IS.cv.flag",waves.fin,sep="_"),
-                            "tilt_flag"
-    )
+      # add names to the data frame # this is the most complicated part of the code!
+      colnames(result.df) = c("MATCHUP_ID","Site","PI","PI(s)_Email","Lat_IS", "Lon_IS",
+                              "TIME_IS",
+                              "PQC",
+                              "MQC",
+                              "land_dist_IS",
+                              "thetas_IS",
+                              paste("Es_IS",raw$waves,sep="_"),
+                              paste("Lw_IS",waves.fin,sep="_"),
+                              paste("rho_w_IS",waves.fin,sep="_"),
+                              "tilt",
+                              "Fluor_chla_IS",
+                              "Fluor_cdom_IS",
+                              paste("Es_IS.cv.flag",waves.fin,sep="_"),
+                              paste("Lw_IS.cv.flag",waves.fin,sep="_"),
+                              "tilt_flag"
+      )
 
     }else{
       colnames(result.df) = c("MATCHUP_ID","Site","PI","PI(s)_Email","Lat_IS", "Lon_IS",
@@ -360,25 +363,40 @@ write.to.MERMAID <- function(OPTICD_fname,
                               "land_dist_IS",
                               "thetas IS",
                               paste("Es_IS",raw$waves,sep="_"),
-                              paste("LwN_IS",waves.fin,sep="_"),
+                              paste("Lw_IS",waves.fin,sep="_"),
                               paste("rho_w_IS",waves.fin,sep="_"),
                               "tilt",
                               "Fluor_chla_IS",
                               "Fluor_cdom_IS",
                               paste("Es_IS.cv.flag",raw$waves,sep="_"),
-                              paste("LwN_IS.cv.flag",raw$waves,sep="_"),
+                              paste("Lw_IS.cv.flag",raw$waves,sep="_"),
                               "tilt_flag"
       )
-  }
+    }
 
 
 
     # Select non-flagged data's
-    result.df.index=which(result.df==1,arr.ind = T)
+    result.df.index=which(result.df[,c(1:11,36:50)]==1,arr.ind = T)
     if( length(result.df.index)==0){
       result.df.MERMAID=result.df[,c(1:32)]
     }else{
-    result.df.MERMAID=result.df[-unique(result.df.index[,1]),c(1:32)]
+      dfdata=result.df[,c(1:32)]
+      for(i in c(1:nrow(result.df.index))){
+        dfdata[result.df.index[i,1],result.df.index[i,2]] =NA
+
+      }
+      for(i in c(1:nrow(result.df.index))){
+        if (result.df.index[i,2]<19){
+        dfdata[result.df.index[i,1],result.df.index[i,2]+14] =NA
+        }else{
+        dfdata[result.df.index[i,1],result.df.index[i,2]+7] =NA
+
+        }
+      }
+
+      result.df.MERMAID=dfdata
+
     }
     ####
 

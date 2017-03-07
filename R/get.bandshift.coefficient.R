@@ -169,7 +169,7 @@ get.bandshift.coefficient <- function(Rrs0,
 
     # Averaged the aph over the wavebands
     ix.aph0 <- match(waves0.vec, aph.coef.iml4$aph.waves)
-    ix.aph <- match(waves.vec, aph.coef.iml4$aph.waves)
+    ix.aph <- match(floor(waves.vec), aph.coef.iml4$aph.waves)
 
     aph.0 <- mean(aph.spec[ix.aph0],na.rm = T)
     aph   <- mean(aph.spec[ix.aph],na.rm = T)
