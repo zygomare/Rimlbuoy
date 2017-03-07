@@ -69,7 +69,7 @@
 #'
 #' @author Thomas Jaegler modified by Simon Belanger
 
-test.write.to.MERMAID <- function(OPTICD_fname,
+write.to.MERMAID <- function(OPTICD_fname,
                              outputdir,
                              Tilt_threshold=10,
                              USE.MEDIAN=FALSE,
